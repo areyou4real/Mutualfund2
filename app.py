@@ -3,57 +3,70 @@ import pandas as pd
 from io import BytesIO
 from utils.file_router import get_processor
 
-st.set_page_config(page_title="Mutual Fund Allocation Generator", layout="centered")
-st.title("🧾 Mutual Fund Allocation Generator")
-st.markdown("Upload one or more mutual fund Excel files. The app will detect the allocations and return a cleaned summary.")
+st.set_page_config(page_title="Mutual Fund Allocator", layout="centered")
+st.title("📊 Mutual Fund Allocation Analyzer")
 
-uploaded_files = st.file_uploader("Upload Excel files", type=["xlsx"], accept_multiple_files=True)
+uploaded_files = st.file_uploader(
+    "Upload one or more Excel files",
+    type=["xlsx"],
+    accept_multiple_files=True,
+    help="Upload mutual fund files in .xlsx format"
+)
+
+results = {}
 
 if uploaded_files:
-    file_dict = {file.name: file.read() for file in uploaded_files}
-    results = {}
+    with st.spinner("Processing uploaded files..."):
+        for file in uploaded_files:
+            fund_name = file.name
+            processor = get_processor(fund_name)
 
-    with st.spinner("Processing files..."):
-        for name, data in file_dict.items():
+            if processor is None:
+                results[fund_name] = f"❌ No processor found for {fund_name}"
+                continue
+
             try:
-                processor = get_processor(name)
-                if processor:
-                    df = processor(data)
-                    # Convert to float if possible, format safely
-                    df["Final Value"] = df["Final Value"].apply(lambda x: f"{float(x):.2f}" if isinstance(x, (int, float, float)) or str(x).replace('.', '', 1).isdigit() else x)
-                    results[name] = df
+                file_bytes = file.read()
+                df = processor(file_bytes)
+
+                if df is not None and not df.empty:
+                    results[fund_name] = df
                 else:
-                    results[name] = f"No processor found for file: {name}"
+                    results[fund_name] = f"❌ No data extracted from {fund_name}"
             except Exception as e:
-                results[name] = f"Error processing {name}: {str(e)}"
+                results[fund_name] = f"❌ Error processing {fund_name}: {str(e)}"
+
+    st.markdown("---")
+    st.header("Results")
 
     valid_results = {k: v for k, v in results.items() if isinstance(v, pd.DataFrame)}
-    error_results = {k: v for k, v in results.items() if not isinstance(v, pd.DataFrame)}
+    invalid_results = {k: v for k, v in results.items() if not isinstance(v, pd.DataFrame)}
 
-    if error_results:
-        st.subheader("❌ Errors")
-        for name, error in error_results.items():
-            st.error(f"{name}: {error}")
+    for name, err in invalid_results.items():
+        st.error(f"{name}: {err}")
+
+    for name, df in valid_results.items():
+        with st.expander(f"📄 {name}"):
+            st.dataframe(df)
 
     if valid_results:
-        st.subheader("✅ Fund Summaries")
-        for name, df in valid_results.items():
-            with st.expander(f"{name.title()} Summary"):
-                st.dataframe(df, use_container_width=True)
+        st.markdown("---")
+        st.subheader("📥 Download Consolidated Output")
 
         output = BytesIO()
         with pd.ExcelWriter(output, engine='openpyxl') as writer:
             for name, df in valid_results.items():
-                sheet_name = name.replace(".xlsx", "")[:31]  # Sheet name max length
+                sheet_name = name.split(".")[0][:31].replace("/", "_").replace("\\", "_")
                 df.to_excel(writer, sheet_name=sheet_name, index=False)
         output.seek(0)
 
-        st.markdown("""
-            <div style='text-align: center; margin-top: 20px;'>
-                <a href="data:application/vnd.openxmlformats-officedocument.spreadsheetml.sheet;base64,{0}" download="Allocation_Output.xlsx">
-                    <button style='padding: 0.5em 1em; font-size: 1em;'>📥 Download All Results</button>
-                </a>
-            </div>
-        """.format(output.getvalue().hex()), unsafe_allow_html=True)
-    else:
-        st.warning("No valid dataframes to display or download.")
+        st.download_button(
+            label="📁 Download Allocation_Output.xlsx",
+            data=output,
+            file_name="Allocation_Output.xlsx",
+            mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+            use_container_width=True
+        )
+
+else:
+    st.info("Upload mutual fund Excel files to begin analysis.")
