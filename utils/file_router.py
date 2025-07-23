@@ -1,15 +1,15 @@
 import pandas as pd
 from io import BytesIO
-from fund_processors.hdfc import process_hdfc
-from fund_processors.hsbc import process_hsbc
-from fund_processors.icici import process_icici
-from fund_processors.mahindra import process_mahindra
-from fund_processors.mirae import process_mirae
-from fund_processors.shriram import process_shriram
-from fund_processors.sundaram import process_sundaram
-from fund_processors.tata import process_tata
-from fund_processors.uti import process_uti
-from fund_processors.adityabirla import process_adityabirla
+from processors.hdfc import process_hdfc
+from processors.hsbc import process_hsbc
+from processors.icici import process_icici
+from processors.mahindra import process_mahindra
+from processors.mirae import process_mirae
+from processors.shriram import process_shriram
+from processors.sundaram import process_sundaram
+from processors.tata import process_tata
+from processors.uti import process_uti
+from processors.adityabirla import process_adityabirla
 
 def route_fund_processor(file_name, file_bytes):
     lower_name = file_name.lower()
