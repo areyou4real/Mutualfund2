@@ -1,37 +1,39 @@
-import pandas as pd
-from io import BytesIO
-from processors.hdfc import process_hdfc
-from processors.hsbc import process_hsbc
-from processors.icici import process_icici
-from processors.mahindra import process_mahindra
-from processors.mirae import process_mirae
-from processors.shriram import process_shriram
-from processors.sundaram import process_sundaram
-from processors.tata import process_tata
-from processors.uti import process_uti
-from processors.adityabirla import process_adityabirla
+# utils/file_router.py
 
-def route_fund_processor(file_name, file_bytes):
-    lower_name = file_name.lower()
-    if "hdfc" in lower_name:
-        return process_hdfc(file_bytes)
-    elif "hsbc" in lower_name:
-        return process_hsbc(file_bytes)
-    elif "icici" in lower_name:
-        return process_icici(file_bytes)
-    elif "mahindra" in lower_name:
-        return process_mahindra(file_bytes)
-    elif "mirae" in lower_name:
-        return process_mirae(file_bytes)
-    elif "shriram" in lower_name:
-        return process_shriram(file_bytes)
-    elif "sundaram" in lower_name:
-        return process_sundaram(file_bytes)
-    elif "tata" in lower_name:
-        return process_tata(file_bytes)
-    elif "uti" in lower_name:
-        return process_uti(file_bytes)
-    elif "aditya" in lower_name or "birla" in lower_name:
-        return process_adityabirla(file_bytes)
-    else:
-        return f"Unknown fund name: {file_name}"
+import os
+
+from processors import (
+    adityabirla,
+    axis,
+    baroda,
+    hdfc,
+    hsbc,
+    icici,
+    mahindra,
+    mirae,
+    shriram,
+    sundaram,
+)
+
+FUND_MAPPING = {
+    "adityabirla": adityabirla.process_adityabirla,
+    "axis": axis.process_axis,
+    "baroda": baroda.process_baroda,
+    "hdfc": hdfc.process_hdfc,
+    "hsbc": hsbc.process_hsbc,
+    "icici": icici.process_icici,
+    "mahindra": mahindra.process_mahindra,
+    "mirae": mirae.process_mirae,
+    "shriram": shriram.process_shriram,
+    "sundaram": sundaram.process_sundaram,
+}
+
+def route_file(filename: str):
+    """
+    Returns the processing function based on the fund name in filename.
+    """
+    base_name = os.path.basename(filename).lower()
+    for key in FUND_MAPPING:
+        if key in base_name:
+            return FUND_MAPPING[key]
+    return None
