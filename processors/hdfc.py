@@ -106,4 +106,6 @@ def process_hdfc(file_bytes):
     df_filtered.at[insert_row, "Tag"] = "International equity"
     insert_row += 1
 
-    return df_filtered[["Tag", "Value"]].dropna()
+    df_filtered = df_filtered.rename(columns={"Value": "Final Value"})
+    return df_filtered[["Tag", "Final Value"]].dropna()
+
