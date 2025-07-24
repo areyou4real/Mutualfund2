@@ -84,7 +84,6 @@ if uploaded_files:
 st.markdown("---")
 st.markdown("""
     <div style="text-align: center; font-size: 0.9rem; color: #999;">
-        Made with ❤️ using Streamlit  
-        Designed for effortless mutual fund analysis.
+        Dheer Doshi
     </div>
 """, unsafe_allow_html=True)
