@@ -128,11 +128,14 @@ if uploaded_files:
 
         output = BytesIO()
         with pd.ExcelWriter(output, engine='openpyxl') as writer:
-            for file_name, df in valid_results.items():
+            for file_name, df in valid_results.items(): 
                 sheet_name = file_name.split(".")[0][:31]
-                st.markdown(f"#### 📊 {sheet_name.title()} Summary")
-                st.dataframe(df, use_container_width=True)
+                
+                with st.expander(f"📊 {sheet_name.title()} Summary"):
+                    st.dataframe(df, use_container_width=True)
+                    
                 df.to_excel(writer, sheet_name=sheet_name, index=False)
+
 
         output.seek(0)
         st.markdown("### 📥 Download Processed File")
