@@ -31,7 +31,7 @@ st.markdown("""
 
     .sub-info {
         font-size: 1.1rem;
-        color: #b0b0b0;
+        color: #00ADB5;
         text-align: center;
         margin-bottom: 30px;
     }
@@ -80,7 +80,7 @@ st.markdown("""
 """, unsafe_allow_html=True)
 
 # --- Title and Subtitle ---
-st.markdown('<div class="main-title">🧾 Mutual Fund Allocation Generator</div>', unsafe_allow_html=True)
+st.markdown('<div class="main-title">Mutual Fund Allocation Generator</div>', unsafe_allow_html=True)
 st.markdown('<div class="sub-info">Upload one or more mutual fund Excel files below. We will automatically detect allocations and summarize them for you.</div>', unsafe_allow_html=True)
 
 # --- File Uploader ---
