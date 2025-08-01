@@ -5,7 +5,7 @@ from utils.file_router import get_processor
 
 # --- Streamlit Page Configuration ---
 st.set_page_config(
-    page_title="🧾 Mutual Fund Allocator",
+    page_title="Mutual Fund Allocator",
     page_icon="🧾",
     layout="centered"
 )
