@@ -3,100 +3,92 @@ import pandas as pd
 from io import BytesIO
 from utils.file_router import get_processor
 
-# --- Streamlit Page Configuration ---
-st.set_page_config(
-    page_title="Mutual Fund Allocator",
-    page_icon="🧾",
-    layout="centered"
-)
+# --- Streamlit Config ---
+st.set_page_config(page_title="🧾 Mutual Fund Allocator", layout="centered", initial_sidebar_state="collapsed")
 
-# --- Custom CSS ---
+# --- Custom CSS and Animations ---
 st.markdown("""
     <style>
-    /* Global Styling */
     html, body, [class*="css"] {
         font-family: 'Segoe UI', sans-serif;
-        background-color: #121212;
-        color: #E0E0E0;
+        background-color: #101010;
+        color: #f1f1f1;
     }
-    
-    /* Title */
+
     .main-title {
-        font-size: 2.8rem;
-        font-weight: 700;
-        color: #00ADB5;
+        font-size: 3rem;
+        font-weight: 800;
         text-align: center;
-        margin-top: 20px;
+        color: #00FFF5;
+        margin-top: 1rem;
+        animation: fadeIn 1s ease-in-out;
     }
 
     .sub-info {
         font-size: 1.1rem;
-        color: #00ADB5;
         text-align: center;
-        margin-bottom: 30px;
+        color: #BBBBBB;
+        margin-bottom: 2rem;
+        animation: fadeIn 1.5s ease-in-out;
     }
 
-    /* Section Header */
-    .stMarkdown h3 {
-        color: #FFD369 !important;
-        border-bottom: 2px solid #393E46;
-        padding-bottom: 5px;
+    .upload-section, .results-section {
+        background-color: #1a1a1a;
+        padding: 2rem;
+        border-radius: 15px;
+        box-shadow: 0 4px 20px rgba(0, 255, 255, 0.1);
+        margin-bottom: 2rem;
     }
 
-    /* Upload Box */
-    .upload-box .stFileUploader label {
-        color: #EEEEEE !important;
-        font-weight: 600;
-    }
-
-    /* Dataframe */
-    .stDataFrame div {
-        background-color: #1f1f1f !important;
-    }
-
-    /* Download Button */
     .stDownloadButton button {
-        background-color: #00ADB5;
+        background-color: #00adb5;
         color: white;
-        font-weight: bold;
         border-radius: 10px;
-        padding: 0.75rem 1.5rem;
+        font-weight: 600;
+        padding: 0.75rem 2rem;
+        transition: 0.3s ease;
     }
 
     .stDownloadButton button:hover {
-        background-color: #00cfcf;
-        transition: 0.3s;
+        background-color: #00d8db;
+        transform: scale(1.03);
     }
 
-    /* Footer */
     .footer {
-        text-align: center;
         font-size: 0.85rem;
-        color: #AAAAAA;
-        margin-top: 2rem;
-        padding: 1rem 0;
+        text-align: center;
+        color: #888888;
+        margin-top: 3rem;
+        padding-bottom: 1rem;
+    }
+
+    @keyframes fadeIn {
+        from {opacity: 0;}
+        to {opacity: 1;}
     }
     </style>
 """, unsafe_allow_html=True)
 
-# --- Title and Subtitle ---
-st.markdown('<div class="main-title">Mutual Fund Allocation Generator</div>', unsafe_allow_html=True)
-st.markdown('<div class="sub-info">Upload one or more mutual fund Excel files below. We will automatically detect allocations and summarize them for you.</div>', unsafe_allow_html=True)
+# --- Title ---
+st.markdown('<div class="main-title">📊 Mutual Fund Allocation Generator</div>', unsafe_allow_html=True)
+st.markdown('<div class="sub-info">Upload Excel files below to automatically detect and summarize mutual fund allocations.</div>', unsafe_allow_html=True)
 
-# --- File Uploader ---
-st.markdown("---")
-st.markdown("### 📤 Upload your Excel files")
-uploaded_files = st.file_uploader(
-    "Select one or more `.xlsx` files",
-    type=["xlsx"],
-    accept_multiple_files=True,
-    key="file_uploader",
-    help="Only Excel (.xlsx) files are supported"
-)
+# --- Upload Section ---
+with st.container():
+    st.markdown('<div class="upload-section">', unsafe_allow_html=True)
+    st.markdown("### 📤 Upload Excel Files")
+    uploaded_files = st.file_uploader(
+        "Upload one or more `.xlsx` files",
+        type=["xlsx"],
+        accept_multiple_files=True,
+        key="uploader",
+        help="Supported file type: .xlsx"
+    )
+    st.markdown("</div>", unsafe_allow_html=True)
 
-# --- Processing Section ---
+# --- Processing ---
 if uploaded_files:
-    st.markdown("---")
+    st.markdown('<div class="results-section">', unsafe_allow_html=True)
     st.markdown("### ⚙️ Processing Results")
 
     file_dict = {file.name: file.read() for file in uploaded_files}
@@ -116,37 +108,33 @@ if uploaded_files:
 
     # --- Display Errors ---
     if error_results:
-        st.markdown("---")
-        st.error("❌ Errors encountered while processing the following files:")
-        for file_name, err in error_results.items():
-            st.markdown(f"**{file_name}**: `{err}`")
+        st.error("❌ The following files could not be processed:")
+        for file_name, error in error_results.items():
+            st.markdown(f"- **{file_name}**: `{error}`")
 
     # --- Display Valid Results ---
     if valid_results:
-        st.markdown("---")
-        st.success("✅ Successfully processed the following files:")
-
         output = BytesIO()
         with pd.ExcelWriter(output, engine='openpyxl') as writer:
-            for file_name, df in valid_results.items(): 
+            for file_name, df in valid_results.items():
                 sheet_name = file_name.split(".")[0][:31]
-                
-                with st.expander(f"📊 {sheet_name.title()} Summary"):
+
+                with st.expander(f"📄 {sheet_name.title()} - View Allocation Summary"):
                     st.dataframe(df, use_container_width=True)
-                    
+
                 df.to_excel(writer, sheet_name=sheet_name, index=False)
 
-
         output.seek(0)
-        st.markdown("### 📥 Download Processed File")
+
+        st.markdown("### 📥 Download Combined Excel File")
         st.download_button(
-            label="Download Excel File",
+            label="Download Summary Excel",
             data=output,
             file_name="MutualFund_Summary.xlsx",
             mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
             use_container_width=True
         )
+    st.markdown("</div>", unsafe_allow_html=True)
 
 # --- Footer ---
-st.markdown("---")
-st.markdown('<div class="footer">Built by Dheer Doshi · All rights reserved · 2025</div>', unsafe_allow_html=True)
+st.markdown('<div class="footer">Built with ❤️ by Dheer Doshi · © 2025</div>', unsafe_allow_html=True)
