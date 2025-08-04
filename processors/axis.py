@@ -24,16 +24,21 @@ def process_axis(file_bytes):
                     return 0.0
         return 0.0
 
+    # Hedged Equity
+    hedged_equity_val = 0.0
     for i, val in enumerate(df_filtered["Category"]):
         if isinstance(val, str) and "derivatives" in val.lower():
-            final_values["Hedged Equity"] = get_total_after_match(i, ["total"])
+            hedged_equity_val = abs(get_total_after_match(i, ["total"]))
+            final_values["Hedged Equity"] = hedged_equity_val
             break
 
+    # Net Equity
     for i, val in enumerate(df_filtered["Category"]):
         if isinstance(val, str) and "equity & equity related" in val.lower():
             final_values["Net Equity"] = get_total_after_match(i, ["total"])
             break
 
+    # Debt
     debt_total = 0.0
     for keyword in ["debt instruments", "money market instruments"]:
         for i, val in enumerate(df_filtered["Category"]):
@@ -42,8 +47,7 @@ def process_axis(file_bytes):
                 break
     final_values["Debt"] = debt_total
 
-    final_values["Net Equity"] -= abs(final_values["Hedged Equity"])
-    final_values["Hedged Equity"] = abs(final_values["Hedged Equity"])
+    final_values["Net Equity"] -= hedged_equity_val
 
     def sum_keyword(keyword):
         total = 0.0
@@ -58,11 +62,13 @@ def process_axis(file_bytes):
     final_values["Gold"] = sum_keyword("gold")
     final_values["Silver"] = sum_keyword("silver")
 
+    # International Equity
     for i, val in enumerate(df_filtered["Category"]):
         if isinstance(val, str) and "foreign" in val.lower():
             final_values["International Equity"] = get_total_after_match(i, ["total"])
             break
 
+    # ReIT/InvIT
     reit_invit_total = 0.0
     for keyword in ["reit", "invit"]:
         for i, val in enumerate(df_filtered["Category"]):
@@ -71,12 +77,15 @@ def process_axis(file_bytes):
                 break
     final_values["ReIT/InvIT"] = reit_invit_total
 
+    # Reverse Repo
     reverse_val = 0.0
-    net_recv_val = 0.0
     for i, val in enumerate(df_filtered["Category"]):
         if isinstance(val, str) and "reverse repo" in val.lower():
             reverse_val = get_total_after_match(i, ["sub total"])
             break
+
+    # Net Receivables
+    net_recv_val = 0.0
     for i, val in enumerate(df_filtered["Category"]):
         if isinstance(val, str) and "net receivables" in val.lower():
             try:
@@ -85,8 +94,9 @@ def process_axis(file_bytes):
                 net_recv_val = 0.0
             break
 
-    final_values["Cash & others"] = reverse_val + net_recv_val - final_values["Hedged Equity"]
+    final_values["Cash & others"] = reverse_val + net_recv_val - hedged_equity_val
 
+    # Final DataFrame
     summary_df = pd.DataFrame({
         "Category": [None] * len(final_values),
         "Value": [None] * len(final_values),
