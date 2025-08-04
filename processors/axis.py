@@ -85,7 +85,7 @@ def process_axis(file_bytes):
                 net_recv_val = 0.0
             break
 
-    final_values["Cash & others"] = reverse_val + net_recv_val
+    final_values["Cash & others"] = reverse_val + net_recv_val - final_values["Hedged Equity"]
 
     summary_df = pd.DataFrame({
         "Category": [None] * len(final_values),
