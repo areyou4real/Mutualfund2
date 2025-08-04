@@ -42,11 +42,13 @@ def process_hsbc(file_bytes):
             if "treps" in val.lower():
                 try:
                     treps_value = float(df_filtered.loc[i, "Value"])
-                except: pass
+                except:
+                    pass
             if "net current assets" in val.lower():
                 try:
                     nca_value = float(df_filtered.loc[i, "Value"])
-                except: pass
+                except:
+                    pass
     cash_value = treps_value + nca_value
 
     # ReIT/InvIT
@@ -67,10 +69,12 @@ def process_hsbc(file_bytes):
     silver_value = 0.0
     for i, val in enumerate(df_filtered["Category"]):
         if isinstance(val, str) and "silver" in val.lower():
-            try:
-                silver_value += float(df_filtered.loc[i, "Value"])
-            except:
-                pass
+            raw_val = df_filtered.loc[i, "Value"]
+            if pd.notna(raw_val):
+                try:
+                    silver_value += float(str(raw_val).replace(",", "").strip())
+                except:
+                    continue
 
     summary_df = pd.DataFrame({
         "Category": [None] * 7,
