@@ -32,6 +32,7 @@ def process_hsbc(file_bytes):
         return total
 
     net_equity_value = find_total_after("Equity & Equity Related Instruments", 1)
+    hedged_equity_value = find_total_after("Hedged Equity", 1)
     debt_value = find_total_after("Debt Instruments", 3)
     gold_value = find_total_after("Exchange Traded Fund", 1)
 
@@ -77,14 +78,14 @@ def process_hsbc(file_bytes):
                     continue
 
     summary_df = pd.DataFrame({
-        "Category": [None] * 7,
-        "Value": [None] * 7,
+        "Category": [None] * 8,
+        "Value": [None] * 8,
         "Tag": [
-            "Net Equity", "Debt", "Gold", "Cash",
+            "Net Equity", "Hedged Equity", "Debt", "Gold", "Cash",
             "ReIT/InvIT", "International Equity", "Silver"
         ],
         "Final Value": [
-            net_equity_value, debt_value, gold_value, cash_value,
+            net_equity_value, hedged_equity_value, debt_value, gold_value, cash_value,
             reit_invit_value, foreign_value, silver_value
         ]
     })
